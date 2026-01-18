@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Head Panel</title>
+    <!-- Poppins Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --white: #ffffff;
+            --primary: #6a11cb;
+            --danger: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Non-Slidable Page */
+        body {
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* This makes the page non-slidable */
+        }
+
+        /* Hamburger Menu Icon */
+        #hamburger-icon {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            cursor: pointer;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        #hamburger-icon div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: #fff;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            padding-top: 20px;
+        }
+
+        .sidebar.active { left: 0; }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: #333;
+            line-height: 1;
+        }
+
+        .sidebar ul { list-style: none; margin-top: 20px; }
+        .sidebar ul li {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .sidebar ul li:hover { background: #f4f4f4; color: var(--primary); }
+
+        /* Perfect Card */
+        .card {
+            background: var(--white);
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            text-align: center;
+            position: relative;
+        }
+        .card.wide { max-width: 700px; }
+
+        h2 { margin-bottom: 25px; color: #302b63; font-weight: 600; }
+
+        /* Input Fields */
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+            text-align: left;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            padding-right: 50px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+
+        /* Facebook Eye Centered */
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+        .eye-icon svg { fill: #777; width: 100%; height: 100%; }
+
+        .btn-create {
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        /* Vertical Table Buttons */
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .admin-table td, .admin-table th { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+
+        /* Scrollable area inside card for long lists while body remains non-slidable */
+        .table-scroll { max-height: 400px; overflow-y: auto; }
+
+        .action-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+        }
+        .action-cell button {
+            width: 85px;
+            padding: 6px 0;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-view { background: #17a2b8; }
+        .btn-block { background: #6c757d; }
+        .btn-del { background: var(--danger); }
+        .dot-sep { color: #888; font-weight: bold; font-size: 14px; line-height: 0.5; }
+
+        /* Success Popup */
+        #popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border-left: 5px solid #28a745;
+            align-items: center;
+        }
+        .checkmark { color: #28a745; font-weight: bold; margin-right: 10px; font-size: 18px; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Icon -->
+    <div id="hamburger-icon" onclick="toggleSidebar(true)">
+        <div></div><div></div><div></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span style="font-weight: 600;">Admin Menu</span>
+            <span class="close-btn" onclick="toggleSidebar(false)">&times;</span>
+        </div>
+        <ul>
+            <li onclick="showPage('create')">Create Admin</li>
+            <li onclick="showPage('manage')">Manage Admin</li>
+        </ul>
+    </div>
+
+    <!-- Card Container -->
+    <div class="card" id="main-card">
+        <!-- Section: Create -->
+        <div id="create-section">
+            <h2>Create Admin</h2>
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password">
+                <div class="eye-icon" onclick="togglePassword()">
+                    <svg id="eye-svg" viewBox="0 0 24 24">
+                        <path id="eye-path" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    </svg>
+                </div>
+            </div>
+            <button class="btn-create" onclick="createAdmin()">Create Admin</button>
+        </div>
+
+        <!-- Section: Manage -->
+        <div id="manage-section" class="hidden">
+            <h2>Manage Admins</h2>
+            <div class="table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th style="text-align:center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="popup">
+        <span class="checkmark">✔</span>
+        <span>Admin Created Successfully</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCARBucF8YVjeohZPRzsenBvvzdI_A_prE",
+            authDomain: "gamingzone-fb037.firebaseapp.com",
+            databaseURL: "https://gamingzone-fb037-default-rtdb.firebaseio.com",
+            projectId: "gamingzone-fb037",
+            storageBucket: "gamingzone-fb037.firebasestorage.app",
+            messagingSenderId: "683585655062",
+            appId: "1:683585655062:web:14f0e676590c04aab44037",
+            measurementId: "G-8BX1PGD0WD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Sidebar Navigation
+        window.toggleSidebar = (isOpen) => {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.getElementById('hamburger-icon');
+            if(isOpen) {
+                sidebar.classList.add('active');
+                hamburger.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('active');
+                hamburger.classList.remove('hidden');
+            }
+        };
+
+        window.showPage = (page) => {
+            const card = document.getElementById('main-card');
+            if(page === 'create') {
+                document.getElementById('create-section').classList.remove('hidden');
+                document.getElementById('manage-section').classList.add('hidden');
+                card.classList.remove('wide');
+            } else {
+                document.getElementById('create-section').classList.add('hidden');
+                document.getElementById('manage-section').classList.remove('hidden');
+                card.classList.add('wide');
+                fetchAdmins();
+            }
+            toggleSidebar(false);
+        };
+
+        // Eye Icon Toggle
+        window.togglePassword = () => {
+            const pass = document.getElementById('password');
+            const path = document.getElementById('eye-path');
+            const eyeOpen = "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
+            const eyeSlash = "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z";
+            if (pass.type === 'password') {
+                pass.type = 'text';
+                path.setAttribute('d', eyeSlash);
+            } else {
+                pass.type = 'password';
+                path.setAttribute('d', eyeOpen);
+            }
+        };
+
+        // Firebase Operations
+        window.createAdmin = async () => {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if(!u || !p) return alert("Fill all fields");
+            await push(ref(db, 'admins/'), {
+                username: u, password: p, isBlocked: false
+            });
+            const popup = document.getElementById('popup');
+            popup.style.display = 'flex';
+            setTimeout(() => popup.style.display = 'none', 2000);
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        };
+
+        function fetchAdmins() {
+            const tbody = document.getElementById('admin-tbody');
+            onValue(ref(db, 'admins/'), (snapshot) => {
+                tbody.innerHTML = '';
+                const data = snapshot.val();
+                for (let id in data) {
+                    const admin = data[id];
+                    const row = `
+                        <tr>
+                            <td>
+                                <strong>${admin.username}</strong>
+                                ${admin.isBlocked ? '<br><small style="color:red">[Blocked]</small>' : ''}
+                            </td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-view" onclick="viewAd('${admin.username}','${admin.password}')">View</button>
+                                    <span class="dot-sep">.</span>
+                                    <button class="btn-block" onclick="blockAd('${id}',${admin.isBlocked})">${admin.isBlocked ? 'Unblock' : 'Block'}</button>
+                                    <span class="dot-sep">.</span>
+                                    <button class="btn-del" onclick="delAd('${id}')">Delete</button>
+                                    <span class="dot-sep">.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                }
+            });
+        }
+
+        window.viewAd = (u, p) => alert(`Username: ${u}\nPassword: ${p}`);
+        window.delAd = (id) => confirm("Delete Admin?") && remove(ref(db, 'admins/'+id));
+        window.blockAd = (id, cur) => update(ref(db, 'admins/'+id), { isBlocked: !cur });
+    </script>
+</body>
+</html>
